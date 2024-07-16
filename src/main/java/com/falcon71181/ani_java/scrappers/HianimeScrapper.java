@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.falcon71181.ani_java.models.hianime.LatestEpisodes;
 import com.falcon71181.ani_java.models.hianime.SpotlightAnimes;
+import com.falcon71181.ani_java.models.hianime.TopUpcomingAnimes;
 import com.falcon71181.ani_java.models.hianime.TrendingAnimes;
 
 /**
@@ -85,10 +86,10 @@ public class HianimeScrapper {
         trendingAnimes.add(new TrendingAnimes(animeId, animeName, animePoster));
       });
 
-      Elements lastestEpisodeContainser = doc
+      Elements lastestEpisodeContainer = doc
           .select("#main-content .block_area_home:nth-of-type(1) .tab-content .film_list-wrap .flw-item");
       List<LatestEpisodes> lastestEpisodes = new ArrayList<>();
-      lastestEpisodeContainser.forEach(element -> {
+      lastestEpisodeContainer.forEach(element -> {
         final String animeId = element.select(".film-detail .film-name .dynamic-name").attr("href").substring(1);
         final String animeName = element.select(".film-detail .film-name .dynamic-name").text().trim();
         final String animePoster = element.select(".film-poster .film-poster-img").attr("data-src");
@@ -107,9 +108,31 @@ public class HianimeScrapper {
             new LatestEpisodes(animeId, animeName, animePoster, noOfSub, noOfDub, totalEp, episodeLength, animeRating));
       });
 
-      homeData.put("spotlight", spotlightAnimes);
+      Elements topUpcomingAnimeContainer = doc
+          .select("#main-content .block_area_home:nth-of-type(3) .tab-content .film_list-wrap .flw-item");
+      List<TopUpcomingAnimes> topUpcomingAnimes = new ArrayList<>();
+      topUpcomingAnimeContainer.forEach(element -> {
+        final String animeId = element.select(".film-detail .film-name .dynamic-name").attr("href").substring(1);
+        final String animeName = element.select(".film-detail .film-name .dynamic-name").text().trim();
+        final String animePoster = element.select(".film-poster .film-poster-img").attr("data-src");
+        final int noOfSub = Integer.valueOf(element.select(".film-poster .tick .tick-sub").text().length() > 0
+            ? element.select(".film-poster .tick .tick-sub").text()
+            : "0");
+        final int noOfDub = Integer.valueOf(element.select(".film-poster .tick .tick-dub").text().length() > 0
+            ? element.select(".film-poster .tick .tick-dub").text()
+            : "0");
+        final int totalEp = Integer.valueOf(element.select(".film-poster .tick .tick-eps").text().length() > 0
+            ? element.select(".film-poster .tick .tick-eps").text()
+            : "0");
+        final String airingOn = element.select(".film-detail .fd-infor .fdi-duration").text().trim();
+        final String animeRating = element.select(".film-poster .tick-rate").text().trim();
+        topUpcomingAnimes.add(new TopUpcomingAnimes(animeId, animeName, animePoster, noOfSub, noOfDub, totalEp,
+            airingOn, animeRating));
+      });
+
       homeData.put("trending", trendingAnimes);
-      homeData.put("latest_episodes", lastestEpisodes);
+      homeData.put("latestEpisodes", lastestEpisodes);
+      homeData.put("topUpcoming", topUpcomingAnimes);
       return homeData;
     } catch (Exception e) {
       logger.warn(e.getMessage());
