@@ -130,9 +130,19 @@ public class HianimeScrapper {
             airingOn, animeRating));
       });
 
+      Elements genreContainer = doc
+          .select("#main-sidebar .block_area.block_area_sidebar.block_area-genres .sb-genre-list li");
+      List<String> genres = new ArrayList<>();
+      genreContainer.forEach(element -> {
+        final String genre = element.text().trim();
+        genres.add(new String(genre));
+      });
+
+      homeData.put("spotlight", spotlightAnimes);
       homeData.put("trending", trendingAnimes);
       homeData.put("latestEpisodes", lastestEpisodes);
       homeData.put("topUpcoming", topUpcomingAnimes);
+      homeData.put("genres", genres);
       return homeData;
     } catch (Exception e) {
       logger.warn(e.getMessage());
