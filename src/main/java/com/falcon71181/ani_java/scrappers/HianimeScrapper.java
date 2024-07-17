@@ -14,6 +14,7 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.falcon71181.ani_java.models.hianime.CategoryAnimes;
 import com.falcon71181.ani_java.models.hianime.LatestEpisodes;
 import com.falcon71181.ani_java.models.hianime.SpotlightAnimes;
 import com.falcon71181.ani_java.models.hianime.Top10Animes;
@@ -22,7 +23,7 @@ import com.falcon71181.ani_java.models.hianime.TopUpcomingAnimes;
 import com.falcon71181.ani_java.models.hianime.TrendingAnimes;
 
 /**
- * HomeScrapper
+ * HianimeScrapper
  */
 @Service
 public class HianimeScrapper {
@@ -231,5 +232,58 @@ public class HianimeScrapper {
       logger.warn(e.getMessage());
       return new HashMap<>();
     }
+  }
+
+  public HashMap<String, List<?>> scrapeCategory(String category, String page) {
+    HashMap<String, List<?>> categoryData = new HashMap<>();
+    try {
+      String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+      Document doc = Jsoup.connect(this.siteUrl + "/" + category + "?page=" + page)
+          .userAgent(userAgent)
+          .header("accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+          .header("accept-language", "en-GB,en-US;q=0.9,en;q=0.8")
+          .header("priority", "u=0, i")
+          .header("sec-ch-ua", "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"")
+          .header("sec-ch-ua-mobile", "?0")
+          .header("sec-ch-ua-platform", "\"macOS\"")
+          .header("sec-fetch-dest", "document")
+          .header("sec-fetch-mode", "navigate")
+          .header("sec-fetch-site", "none")
+          .header("sec-fetch-user", "?1")
+          .header("upgrade-insecure-requests", "1")
+          .get();
+
+      Elements animeContainer = doc
+          .select("#main-content .tab-content .film_list-wrap .flw-item");
+      List<CategoryAnimes> categoryAnimes = new ArrayList<>();
+      animeContainer.forEach(element -> {
+        final String animeId = element.select(".film-detail .film-name .dynamic-name").attr("href").substring(1);
+        final String animeName = element.select(".film-detail .film-name .dynamic-name").text().trim();
+        final String animePoster = element.select(".film-poster .film-poster-img").attr("data-src");
+        final int noOfSub = Integer.valueOf(element.select(".film-poster .tick .tick-sub").text().length() > 0
+            ? element.select(".film-poster .tick .tick-sub").text()
+            : "0");
+        final int noOfDub = Integer.valueOf(element.select(".film-poster .tick .tick-dub").text().length() > 0
+            ? element.select(".film-poster .tick .tick-dub").text()
+            : "0");
+        final int totalEp = Integer.valueOf(element.select(".film-poster .tick .tick-eps").text().length() > 0
+            ? element.select(".film-poster .tick .tick-eps").text()
+            : "0");
+        final String airingOn = element.select(".film-detail .fd-infor .fdi-duration").text().trim();
+        final String animeRating = element.select(".film-poster .tick-rate").text().trim();
+        categoryAnimes.add(new CategoryAnimes(animeId, animeName, animePoster, noOfSub, noOfDub, totalEp,
+            airingOn, animeRating));
+      });
+
+      categoryData.put("animes", categoryAnimes);
+
+      return categoryData;
+    } catch (Exception e) {
+      logger.warn(e.getMessage());
+      return new HashMap<>();
+    }
+
   }
 }
