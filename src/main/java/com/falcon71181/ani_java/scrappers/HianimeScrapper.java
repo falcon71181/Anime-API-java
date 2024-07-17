@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.falcon71181.ani_java.models.hianime.LatestEpisodes;
 import com.falcon71181.ani_java.models.hianime.SpotlightAnimes;
+import com.falcon71181.ani_java.models.hianime.Top10Animes;
 import com.falcon71181.ani_java.models.hianime.TopAiringAnimes;
 import com.falcon71181.ani_java.models.hianime.TopUpcomingAnimes;
 import com.falcon71181.ani_java.models.hianime.TrendingAnimes;
@@ -141,6 +142,73 @@ public class HianimeScrapper {
         topAiringAnimes.add(new TopAiringAnimes(animeId, animeName, animePoster));
       });
 
+      Elements top10AnimeInDayContainer = doc
+          .select("#main-sidebar .block_area-realtime [id^=\"top-viewed-day\"] ul li");
+      List<Top10Animes> top10AnimesInDay = new ArrayList<>();
+      top10AnimeInDayContainer.forEach(element -> {
+        final String animeId = element.select(".film-detail .film-name .dynamic-name").attr("href").substring(1);
+        final String animeName = element.select(".film-detail .film-name .dynamic-name").text().trim();
+        final String animePoster = element.select(".film-poster a .film-poster-img").attr("data-src").trim();
+        final int noOfSub = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-sub").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-sub").text()
+                : "0");
+        final int noOfDub = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-dub").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-dub").text()
+                : "0");
+        final int totalEp = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-eps").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-eps").text()
+                : "0");
+        final int animeRank = Integer.parseInt(element.select(".film-number span").text().trim());
+        top10AnimesInDay.add(new Top10Animes(animeId, animeName, animePoster, animeRank, noOfSub, noOfDub, totalEp));
+      });
+      Elements top10AnimeInWeekContainer = doc
+          .select("#main-sidebar .block_area-realtime [id^=\"top-viewed-week\"] ul li");
+      List<Top10Animes> top10AnimesInWeek = new ArrayList<>();
+      top10AnimeInWeekContainer.forEach(element -> {
+        final String animeId = element.select(".film-detail .film-name .dynamic-name").attr("href").substring(1);
+        final String animeName = element.select(".film-detail .film-name .dynamic-name").text().trim();
+        final String animePoster = element.select(".film-poster a .film-poster-img").attr("data-src").trim();
+        final int animeRank = Integer.parseInt(element.select(".film-number span").text().trim());
+        final int noOfSub = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-sub").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-sub").text()
+                : "0");
+        final int noOfDub = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-dub").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-dub").text()
+                : "0");
+        final int totalEp = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-eps").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-eps").text()
+                : "0");
+        top10AnimesInWeek.add(new Top10Animes(animeId, animeName, animePoster, animeRank, noOfSub, noOfDub, totalEp));
+      });
+      Elements top10AnimeInMonthContainer = doc
+          .select("#main-sidebar .block_area-realtime [id^=\"top-viewed-month\"] ul li");
+      List<Top10Animes> top10AnimesInMonth = new ArrayList<>();
+      top10AnimeInMonthContainer.forEach(element -> {
+        final String animeId = element.select(".film-detail .film-name .dynamic-name").attr("href").substring(1);
+        final String animeName = element.select(".film-detail .film-name .dynamic-name").text().trim();
+        final String animePoster = element.select(".film-poster a .film-poster-img").attr("data-src").trim();
+        final int animeRank = Integer.parseInt(element.select(".film-number span").text().trim());
+        final int noOfSub = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-sub").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-sub").text()
+                : "0");
+        final int noOfDub = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-dub").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-dub").text()
+                : "0");
+        final int totalEp = Integer
+            .parseInt(String.valueOf(element.select(".film-detail .fd-infor .tick-item.tick-eps").text()).length() > 0
+                ? element.select(".film-detail .fd-infor .tick-item.tick-eps").text()
+                : "0");
+        top10AnimesInMonth.add(new Top10Animes(animeId, animeName, animePoster, animeRank, noOfSub, noOfDub, totalEp));
+      });
+
       Elements genreContainer = doc
           .select("#main-sidebar .block_area.block_area_sidebar.block_area-genres .sb-genre-list li");
       List<String> genres = new ArrayList<>();
@@ -155,6 +223,9 @@ public class HianimeScrapper {
       homeData.put("topUpcoming", topUpcomingAnimes);
       homeData.put("topAiring", topAiringAnimes);
       homeData.put("genres", genres);
+      homeData.put("top-viewed-day", top10AnimesInDay);
+      homeData.put("top-viewed-week", top10AnimesInWeek);
+      homeData.put("top-viewed-month", top10AnimesInMonth);
       return homeData;
     } catch (Exception e) {
       logger.warn(e.getMessage());
