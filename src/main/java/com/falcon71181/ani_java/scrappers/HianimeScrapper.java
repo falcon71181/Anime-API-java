@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.falcon71181.ani_java.models.hianime.LatestEpisodes;
 import com.falcon71181.ani_java.models.hianime.SpotlightAnimes;
+import com.falcon71181.ani_java.models.hianime.TopAiringAnimes;
 import com.falcon71181.ani_java.models.hianime.TopUpcomingAnimes;
 import com.falcon71181.ani_java.models.hianime.TrendingAnimes;
 
@@ -130,6 +131,16 @@ public class HianimeScrapper {
             airingOn, animeRating));
       });
 
+      Elements topAiringAnimeContainer = doc
+          .select("#anime-featured .row div:nth-of-type(1) .anif-block-ul ul li");
+      List<TopAiringAnimes> topAiringAnimes = new ArrayList<>();
+      topAiringAnimeContainer.forEach(element -> {
+        final String animeId = element.select(".film-detail .film-name .dynamic-name").attr("href").substring(1);
+        final String animeName = element.select(".film-detail .film-name .dynamic-name").text().trim();
+        final String animePoster = element.select(".film-poster a .film-poster-img").attr("data-src").trim();
+        topAiringAnimes.add(new TopAiringAnimes(animeId, animeName, animePoster));
+      });
+
       Elements genreContainer = doc
           .select("#main-sidebar .block_area.block_area_sidebar.block_area-genres .sb-genre-list li");
       List<String> genres = new ArrayList<>();
@@ -142,6 +153,7 @@ public class HianimeScrapper {
       homeData.put("trending", trendingAnimes);
       homeData.put("latestEpisodes", lastestEpisodes);
       homeData.put("topUpcoming", topUpcomingAnimes);
+      homeData.put("topAiring", topAiringAnimes);
       homeData.put("genres", genres);
       return homeData;
     } catch (Exception e) {
