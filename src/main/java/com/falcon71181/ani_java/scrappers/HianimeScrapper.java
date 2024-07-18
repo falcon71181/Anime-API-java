@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.swing.text.html.parser.Element;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -363,6 +365,70 @@ public class HianimeScrapper {
       logger.warn(e.getMessage());
       return new HashMap<>();
     }
+  }
 
+  public HashMap<String, String> scrapeAbout(String animeID) {
+    try {
+      HashMap<String, String> aboutData = new HashMap<>();
+
+      String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+      Document doc = Jsoup.connect(this.siteUrl + "/" + animeID)
+          .userAgent(userAgent)
+          .header("accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+          .header("accept-language", "en-GB,en-US;q=0.9,en;q=0.8")
+          .header("priority", "u=0, i")
+          .header("sec-ch-ua", "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"")
+          .header("sec-ch-ua-mobile", "?0")
+          .header("sec-ch-ua-platform", "\"macOS\"")
+          .header("sec-fetch-dest", "document")
+          .header("sec-fetch-mode", "navigate")
+          .header("sec-fetch-site", "none")
+          .header("sec-fetch-user", "?1")
+          .header("upgrade-insecure-requests", "1")
+          .get();
+
+      Elements infoContainer = doc
+          .select("#ani_detail .container .anis-content");
+      // logger.error(infoContainer.html());
+      infoContainer.forEach(element -> {
+        final String animeId = element.select(".anisc-detail .film-buttons a.btn-play").attr("href").substring(1)
+            .split("/")[1];
+        final String animeName = element.select(".anisc-detail .film-name.dynamic-name").text().trim();
+        final String animePoster = element.select(".film-poster .film-poster-img").attr("src");
+        final String noOfSub = (element.select(".film-stats .tick .tick-sub").text().length() > 0
+            ? element.select(".film-stats .tick .tick-sub").text()
+            : "0");
+        final String noOfDub = (element.select(".film-stats .tick .tick-dub").text().length() > 0
+            ? element.select(".film-stats .tick .tick-dub").text()
+            : "0");
+        final String totalEp = (element.select(".film-stats .tick .tick-eps").text().length() > 0
+            ? element.select(".film-stats .tick .tick-eps").text()
+            : "0");
+        final String animeRating = element.select(".film-stats .tick .tick-pg").text().trim();
+        final String animeEpisodeInfo = element.select(".film-stats .tick").text().trim();
+        final String[] infoArray = animeEpisodeInfo.split(" ");
+        final String duration = infoArray[infoArray.length - 1];
+        final String category = infoArray[4];
+        final String animeDescription = element.select(".anisc-detail .film-description .text").text();
+        aboutData.put("animeId", animeId);
+        aboutData.put("animeName", animeName);
+        aboutData.put("animeDescription", animeDescription);
+        aboutData.put("animePoster", animePoster);
+        aboutData.put("animeRating", animeRating);
+        aboutData.put("animeEpisodeInfo", animeEpisodeInfo);
+        aboutData.put("duration", duration);
+        aboutData.put("sub", noOfSub);
+        aboutData.put("dub", noOfDub);
+        aboutData.put("eps", totalEp);
+        aboutData.put("category", category);
+      });
+
+      return aboutData;
+    } catch (Exception e) {
+      logger.warn(e.getMessage());
+      return new HashMap<>();
+    }
   }
 }
