@@ -41,4 +41,9 @@ public class HianmieController {
       @RequestParam(required = false, defaultValue = "1") String page) {
     return new ResponseEntity<>(hianimeScrapper.scrapeCategory(category, page), HttpStatus.OK);
   }
+
+  @GetMapping(value = "/anime/{animeId}", produces = { "application/json" })
+  public ResponseEntity<?> getAboutData(@PathVariable String animeId) {
+    return new ResponseEntity<>(hianimeScrapper.scrapeAbout(animeId), HttpStatus.OK);
+  }
 }
