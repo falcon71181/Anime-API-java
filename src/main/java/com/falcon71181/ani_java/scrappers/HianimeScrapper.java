@@ -425,6 +425,23 @@ public class HianimeScrapper {
         aboutData.put("category", category);
       });
 
+      Elements genreContainer = doc
+          .select("#ani_detail .container .anis-content .anisc-info .item-list a");
+      List<String> genres = new ArrayList<>();
+      genreContainer.forEach(element -> {
+        genres.add(element.text().trim());
+      });
+
+      Elements producerContainer = doc
+          .select("#ani_detail .container .anis-content .anisc-info .item-title");
+      producerContainer.forEach(element -> {
+        final String fieldKey = element.select(".item-head").text().trim();
+        final String fieldValue = element.select(".name").text().trim();
+
+        aboutData.put(fieldKey, fieldValue);
+      });
+      // logger.error(moreInfo.toString());
+
       return aboutData;
     } catch (Exception e) {
       logger.warn(e.getMessage());
