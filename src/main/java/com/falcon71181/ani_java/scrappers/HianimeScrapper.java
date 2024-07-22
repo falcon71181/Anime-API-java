@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.swing.text.html.parser.Element;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -17,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.falcon71181.ani_java.models.hianime.CategoryAnimes;
+import com.falcon71181.ani_java.models.hianime.EpisodeInfo;
 import com.falcon71181.ani_java.models.hianime.LatestEpisodes;
 import com.falcon71181.ani_java.models.hianime.SpotlightAnimes;
 import com.falcon71181.ani_java.models.hianime.Top10Animes;
@@ -446,6 +445,101 @@ public class HianimeScrapper {
     } catch (Exception e) {
       logger.warn(e.getMessage());
       return new HashMap<>();
+    }
+  }
+
+  public HashMap<String, ?> scrapeEpisodesInfo(String animeID) {
+    try {
+      HashMap<String, ?> episodeData = new HashMap<>();
+
+      String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+      String[] anime_no_array = animeID.split("-");
+      Document doc = Jsoup.connect(this.siteUrl + "/ajax/v2/episode/list/" + anime_no_array[anime_no_array.length - 1])
+          .userAgent(userAgent)
+          .header("accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+          .header("accept-language", "en-GB,en-US;q=0.9,en;q=0.8")
+          .header("priority", "u=0, i")
+          .header("sec-ch-ua", "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"")
+          .header("sec-ch-ua-mobile", "?0")
+          .header("sec-ch-ua-platform", "\"macOS\"")
+          .header("sec-fetch-dest", "document")
+          .header("sec-fetch-mode", "navigate")
+          .header("sec-fetch-site", "none")
+          .header("sec-fetch-user", "?1")
+          .header("upgrade-insecure-requests", "1")
+          .get();
+
+      // logger.error(doc.html());
+      Elements episodeInfoContainer = doc
+          .select(".detail-infor-content .ss-list a");
+      List<EpisodeInfo> episodeInfos = new ArrayList<>();
+      episodeInfoContainer.forEach(element -> {
+        final String episodeName = element.select("title").text().trim();
+        final String episodeId = element.select("href").text();
+        final int episodeNo = Integer.valueOf(element.select("data-number").text());
+        logger.error(episodeName + episodeId);
+
+        episodeInfos.add(new EpisodeInfo(episodeName, episodeId, episodeNo, "true"));
+      });
+      logger.error(episodeInfos.toString());
+      // episodeData.put("episodes", episodeInfos);
+
+      return episodeData;
+    } catch (Exception e) {
+      logger.warn(e.getMessage());
+      return new HashMap<>();
+    }
+  }
+
+  public List<TopUpcomingAnimes> scrapeaTozAnime(String page_no) {
+    List<TopUpcomingAnimes> atozAnimeList = new ArrayList<>();
+    try {
+      String userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+      Document doc = Jsoup.connect(this.siteUrl + "/az-list/" + "?page=" + page_no)
+          .userAgent(userAgent)
+          .header("accept",
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+          .header("accept-language", "en-GB,en-US;q=0.9,en;q=0.8")
+          .header("priority", "u=0, i")
+          .header("sec-ch-ua", "\"Not/A)Brand\";v=\"8\", \"Chromium\";v=\"126\", \"Google Chrome\";v=\"126\"")
+          .header("sec-ch-ua-mobile", "?0")
+          .header("sec-ch-ua-platform", "\"macOS\"")
+          .header("sec-fetch-dest", "document")
+          .header("sec-fetch-mode", "navigate")
+          .header("sec-fetch-site", "none")
+          .header("sec-fetch-user", "?1")
+          .header("upgrade-insecure-requests", "1")
+          .get();
+
+      Elements animeContainer = doc
+          .select("#main-wrapper div div.page-az-wrap section div.tab-content div div.film_list-wrap .flw-item");
+      animeContainer.forEach(element -> {
+        final String animeId = element.select(".film-detail .film-name .dynamic-name").attr("href").substring(1);
+        final String animeName = element.select(".film-detail .film-name .dynamic-name").text().trim();
+        final String animePoster = element.select(".film-poster .film-poster-img").attr("data-src");
+        final int noOfSub = Integer.valueOf(element.select(".film-poster .tick .tick-sub").text().length() > 0
+            ? element.select(".film-poster .tick .tick-sub").text()
+            : "0");
+        final int noOfDub = Integer.valueOf(element.select(".film-poster .tick .tick-dub").text().length() > 0
+            ? element.select(".film-poster .tick .tick-dub").text()
+            : "0");
+        final int totalEp = Integer.valueOf(element.select(".film-poster .tick .tick-eps").text().length() > 0
+            ? element.select(".film-poster .tick .tick-eps").text()
+            : "0");
+        final String airingOn = element.select(".film-detail .fd-infor .fdi-duration").text().trim();
+        final String animeRating = element.select(".film-poster .tick-rate").text().trim();
+
+        atozAnimeList.add(
+            new TopUpcomingAnimes(animeId, animeName, animePoster, noOfSub, noOfDub, totalEp, airingOn, animeRating));
+      });
+
+      return atozAnimeList;
+    } catch (Exception e) {
+      logger.warn(e.getMessage());
+      return new ArrayList<>();
     }
   }
 }
