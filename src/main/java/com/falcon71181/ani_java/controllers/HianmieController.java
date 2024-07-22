@@ -42,8 +42,18 @@ public class HianmieController {
     return new ResponseEntity<>(hianimeScrapper.scrapeCategory(category, page), HttpStatus.OK);
   }
 
+  @GetMapping(value = "/az-list", produces = { "application/json" })
+  public ResponseEntity<?> getatozAnimeData(@RequestParam(required = false, defaultValue = "1") String page) {
+    return new ResponseEntity<>(hianimeScrapper.scrapeaTozAnime(page), HttpStatus.OK);
+  }
+
   @GetMapping(value = "/anime/{animeId}", produces = { "application/json" })
   public ResponseEntity<?> getAboutData(@PathVariable String animeId) {
     return new ResponseEntity<>(hianimeScrapper.scrapeAbout(animeId), HttpStatus.OK);
+  }
+
+  @GetMapping(value = "/episodes/{animeId}", produces = { "application/json" })
+  public ResponseEntity<?> getEpisodeData(@PathVariable String animeId) {
+    return new ResponseEntity<>(hianimeScrapper.scrapeEpisodesInfo(animeId), HttpStatus.OK);
   }
 }
